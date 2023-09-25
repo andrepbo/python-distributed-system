@@ -1,5 +1,4 @@
 import socket
-import numpy as np
 
 # Server configuration
 HOST = '127.0.0.1'  # Server IP address
@@ -13,23 +12,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.listen()
 
     print('Waiting for connections...')
-    conn, addr = s.accept()  # Accept the connection
+    conn, addr = s.accept()
+    print('Connected by', addr)
     with conn:
-        print('Connected by', addr)
+        total_sales = 0
+        max_sales = 0
+        max_sales_day = 0
+        sales_data = []
         while True:
-            data = conn.recv(1024)  # Receive data from the client
+            data = conn.recv(1024)
             if not data:
                 break
-            # Convert the received data to a list of numbers
-            sales_data = list(map(float, data.decode().split(',')))
+            print('Received data:', data)
+            numbers = [float(x) for x in data.decode().split(',') if x]
+            print('Parsed numbers:', numbers)
+            if numbers:
+                total_sales = sum(numbers)
+                max_sales = max(numbers)
+                max_sales_day = numbers.index(max_sales) + 1
 
-            # Perform data mining to find the maximum sales and the day
-            max_sales = max(sales_data)
-            # Assume days are numbered from 1
-            max_sales_day = sales_data.index(max_sales) + 1
-
-            # Prepare the mining results to send back to the client
-            mining_results = f"Maximum Sales: {max_sales}, Day: {max_sales_day}"
-
-            # Send the mining results back to the client
-            conn.sendall(mining_results.encode())
+        result = f"Total Sales: {total_sales}, Max Sales: {max_sales} on Day {max_sales_day}"
+        print('Sending result:', result)
+        conn.sendall(result.encode())
